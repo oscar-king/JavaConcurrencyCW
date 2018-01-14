@@ -50,9 +50,11 @@ public class MyLiftController implements LiftController {
         notifyAll();
         int[] peopleGoingInDirection = (currentDirection == Direction.UP) ? peopleGoingUpAtFloor : peopleGoingDownAtFloor;
         while (peopleGoingInDirection[floor]>0||peopleGettingOutAtFloor[floor]>0) wait();
+
     }
 
     public synchronized void doorsClosed(int floor) {
     	doorsOpen = false;
+    	notifyAll();
     }
 }
