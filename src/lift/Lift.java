@@ -32,7 +32,7 @@ public class Lift extends Thread {
                     openDoors(floor);
                 }
 
-                sleep(100); // Move between floors - takes 5 seconds.
+                sleep(5000); // Move between floors - takes 5 seconds.
                 floor += (direction == LiftController.Direction.UP) ? +1 : -1;
 
                 // Change direction if required.

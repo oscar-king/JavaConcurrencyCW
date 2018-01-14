@@ -6,15 +6,16 @@ package lift;
  * @author K. Bryson
  */
 public class MyLiftController implements LiftController {
-    int currentFloor = 0;
-    Direction currentDirection = Direction.UP;
-    boolean doorsOpen = false;
-    int[] peopleGoingUpAtFloor = new int[9];
-    int[] peopleGoingDownAtFloor = new int[9];
-    int[] peopleGettingOutAtFloor = new int[9];
+    private int currentFloor = 0;
+    private Direction currentDirection = Direction.UP;
+    private boolean doorsOpen = false;
+    private int[] peopleGoingUpAtFloor = new int[9];
+    private int[] peopleGoingDownAtFloor = new int[9];
+    private int[] peopleGettingOutAtFloor = new int[9];
 
 
     /* Interface for People */
+
     public synchronized void pushUpButton(int floor) throws InterruptedException {
         peopleGoingUpAtFloor[floor]++;
         while (!(currentFloor == floor && currentDirection == Direction.UP && doorsOpen)) wait();
@@ -39,6 +40,13 @@ public class MyLiftController implements LiftController {
     
     /* Interface for Lifts */
     public synchronized boolean liftAtFloor(int floor, Direction direction) {
+
+        /*
+            liftAtFloor changes the state of the currentFloor and currentDirection
+            If the number of people who want to enter the lift with the given direction
+            and exit the lift at the current floor is not 0 return true, else false
+         */
+
         currentFloor = floor;
         currentDirection = direction;
         int peopleGoingInDirection = (currentDirection == Direction.UP) ? peopleGoingUpAtFloor[floor] : peopleGoingDownAtFloor[floor];
@@ -46,6 +54,13 @@ public class MyLiftController implements LiftController {
     }
 
     public synchronized void doorsOpen(int floor) throws InterruptedException {
+
+        /*
+            1. NotifyAll before the wait to wake up other methods prior to entering a waiting state
+            no threads will be awake if done after.
+            2. Condition checks for people leaving the lift and people wanting to enter, not if they actually did
+         */
+
         doorsOpen = true;
         notifyAll();
         int[] peopleGoingInDirection = (currentDirection == Direction.UP) ? peopleGoingUpAtFloor : peopleGoingDownAtFloor;
