@@ -42,15 +42,14 @@ public class MyLiftController implements LiftController {
         currentFloor = floor;
         currentDirection = direction;
         int peopleGoingInDirection = (currentDirection == Direction.UP) ? peopleGoingUpAtFloor[floor] : peopleGoingDownAtFloor[floor];
-        return peopleGoingInDirection + peopleGettingOutAtFloor[floor] != 0 ;
+        return (peopleGoingInDirection + peopleGettingOutAtFloor[floor]) != 0 ;
     }
 
     public synchronized void doorsOpen(int floor) throws InterruptedException {
         doorsOpen = true;
-        wait(5000);
         notifyAll();
-//        while ((instructions.getNumberOfPeopleWaitingAtFloorWithDirection(floor,currentDirection)>0)||instructions.getNumberOfPeopleLeavingLiftAtFloor(floor)>0) wait();
-//        notifyAll();
+        int[] peopleGoingInDirection = (currentDirection == Direction.UP) ? peopleGoingUpAtFloor : peopleGoingDownAtFloor;
+        while (peopleGoingInDirection[floor]>0||peopleGettingOutAtFloor[floor]>0) wait();
     }
 
     public synchronized void doorsClosed(int floor) {
