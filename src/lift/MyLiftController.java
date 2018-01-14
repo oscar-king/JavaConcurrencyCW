@@ -24,14 +24,14 @@ public class MyLiftController implements LiftController {
 
     public synchronized void pushDownButton(int floor) throws InterruptedException {
         peopleGoingDownAtFloor[floor]++;
-        while (!(currentFloor == floor && currentDirection == Direction.UP && doorsOpen)) wait();
+        while (!(currentFloor == floor && currentDirection == Direction.DOWN && doorsOpen)) wait();
         peopleGoingDownAtFloor[floor]--;
         notifyAll();
     }
     
     public synchronized void selectFloor(int floor) throws InterruptedException {
         peopleGettingOutAtFloor[floor]++;
-        while (!(currentFloor == floor && currentDirection == Direction.UP && doorsOpen)) wait();
+        while (!(currentFloor == floor && doorsOpen)) wait();
         peopleGettingOutAtFloor[floor]--;
         notifyAll();
     }
