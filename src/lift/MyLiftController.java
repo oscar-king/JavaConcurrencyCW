@@ -44,13 +44,9 @@ public class MyLiftController implements LiftController {
 
     public synchronized void doorsOpen(int floor) throws InterruptedException {
         doorsOpen = true;
+//        wait(5000);
         notifyAll();
-        wait(5000);
-//        int dir = (currentDirection==Direction.UP) ? 0:1;
-//        int pushCount = instructions.instructionsArr[floor][dir];
-//        while (instructions.instructionsArr[floor][dir]!=0||instructions.instructionsArr[floor][2]!=pushCount) {
-//            wait();
-//        }
+        while ((instructions.getNumberOfPeopleWaitingAtFloorWithDirection(floor,currentDirection)>0)||instructions.getNumberOfPeopleLeavingLiftAtFloor(floor)>0) wait();
         notifyAll();
     }
 
@@ -59,7 +55,7 @@ public class MyLiftController implements LiftController {
     }
 
     //Inner class dealing with instructions
-    private class Instructions {
+    public class Instructions {
         // instructionsArr[floor][0] =
         private int[][] instructionsArr = new int[9][3];
 
@@ -100,6 +96,21 @@ public class MyLiftController implements LiftController {
                     instructionsArr[floor][2]=(instructionsArr[floor][2]>0) ? instructionsArr[floor][2]--: instructionsArr[floor][2];
                     break;
             }
+        }
+
+        private synchronized int getNumberOfPeopleWaitingAtFloorWithDirection(int floor, Direction direction) {
+            switch (direction) {
+                case UP:
+                    return instructionsArr[floor][0];
+                case DOWN:
+                    return instructionsArr[floor][1];
+                default:
+                    return 0;
+            }
+        }
+
+        private synchronized int getNumberOfPeopleLeavingLiftAtFloor(int floor) {
+            return instructionsArr[floor][2];
         }
     }
 }
