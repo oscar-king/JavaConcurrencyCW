@@ -6,31 +6,33 @@ package lift;
  * @author K. Bryson
  */
 public class MyLiftController implements LiftController {
-    Instructions instructions = new Instructions();
     int currentFloor = 0;
     Direction currentDirection = Direction.UP;
     boolean doorsOpen = false;
+    int[] peopleGoingUpAtFloor = new int[9];
+    int[] peopleGoingDownAtFloor = new int[9];
+    int[] peopleGettingOutAtFloor = new int[9];
 
 
     /* Interface for People */
     public synchronized void pushUpButton(int floor) throws InterruptedException {
-        instructions.addInstruction(floor,Direction.UP);
-        while (!(liftAtFloor(currentFloor,currentDirection)&&doorsOpen&&currentFloor==floor&&currentDirection==Direction.UP)) wait();
-        instructions.removeInstruction(floor,Direction.UP);
+        peopleGoingUpAtFloor[floor]++;
+        while (!(currentFloor == floor && currentDirection == Direction.UP && doorsOpen)) wait();
+        peopleGoingUpAtFloor[floor]--;
         notifyAll();
     }
 
     public synchronized void pushDownButton(int floor) throws InterruptedException {
-        instructions.addInstruction(floor,Direction.DOWN);
-        while (!(liftAtFloor(currentFloor,currentDirection)&&doorsOpen&&currentFloor==floor&&currentDirection==Direction.DOWN)) wait();
-        instructions.removeInstruction(floor,Direction.DOWN);
+        peopleGoingDownAtFloor[floor]++;
+        while (!(currentFloor == floor && currentDirection == Direction.UP && doorsOpen)) wait();
+        peopleGoingDownAtFloor[floor]--;
         notifyAll();
     }
     
     public synchronized void selectFloor(int floor) throws InterruptedException {
-        instructions.addInstruction(floor,Direction.UNSET);
-        while (!(liftAtFloor(currentFloor,currentDirection)&&doorsOpen&&currentFloor==floor)) wait();
-        instructions.removeInstruction(floor,Direction.UNSET);
+        peopleGettingOutAtFloor[floor]++;
+        while (!(currentFloor == floor && currentDirection == Direction.UP && doorsOpen)) wait();
+        peopleGettingOutAtFloor[floor]--;
         notifyAll();
     }
 
@@ -39,78 +41,19 @@ public class MyLiftController implements LiftController {
     public synchronized boolean liftAtFloor(int floor, Direction direction) {
         currentFloor = floor;
         currentDirection = direction;
-        return instructions.contains(floor,direction);
+        int peopleGoingInDirection = (currentDirection == Direction.UP) ? peopleGoingUpAtFloor[floor] : peopleGoingDownAtFloor[floor];
+        return peopleGoingInDirection + peopleGettingOutAtFloor[floor] != 0 ;
     }
 
     public synchronized void doorsOpen(int floor) throws InterruptedException {
         doorsOpen = true;
-//        wait(5000);
+        wait(5000);
         notifyAll();
-        while ((instructions.getNumberOfPeopleWaitingAtFloorWithDirection(floor,currentDirection)>0)||instructions.getNumberOfPeopleLeavingLiftAtFloor(floor)>0) wait();
-        notifyAll();
+//        while ((instructions.getNumberOfPeopleWaitingAtFloorWithDirection(floor,currentDirection)>0)||instructions.getNumberOfPeopleLeavingLiftAtFloor(floor)>0) wait();
+//        notifyAll();
     }
 
     public synchronized void doorsClosed(int floor) {
     	doorsOpen = false;
-    }
-
-    //Inner class dealing with instructions
-    public class Instructions {
-        // instructionsArr[floor][0] =
-        private int[][] instructionsArr = new int[9][3];
-
-        private synchronized boolean contains(int floor, Direction direction) {
-            switch (direction) {
-                case UNSET:
-                    return instructionsArr[floor][2] != 0;
-                default:
-                    int dir = (direction == Direction.UP) ? 0:1;
-                    return (instructionsArr[floor][dir]+ instructionsArr[floor][2])!=0;
-            }
-        }
-
-
-        private synchronized void addInstruction(int floor, Direction direction) {
-            switch (direction) {
-                case UP:
-                    instructionsArr[floor][0]++;
-                    break;
-                case DOWN:
-                    instructionsArr[floor][1]++;
-                    break;
-                case UNSET:
-                    instructionsArr[floor][2]++;
-                    break;
-            }
-        }
-
-        private synchronized void removeInstruction(int floor, Direction direction) {
-            switch (direction) {
-                case UP:
-                    instructionsArr[floor][0]=(instructionsArr[floor][0]>0) ? instructionsArr[floor][0]--: instructionsArr[floor][0];
-                    break;
-                case DOWN:
-                    instructionsArr[floor][1]=(instructionsArr[floor][1]>0) ? instructionsArr[floor][1]--: instructionsArr[floor][1];
-                    break;
-                case UNSET:
-                    instructionsArr[floor][2]=(instructionsArr[floor][2]>0) ? instructionsArr[floor][2]--: instructionsArr[floor][2];
-                    break;
-            }
-        }
-
-        private synchronized int getNumberOfPeopleWaitingAtFloorWithDirection(int floor, Direction direction) {
-            switch (direction) {
-                case UP:
-                    return instructionsArr[floor][0];
-                case DOWN:
-                    return instructionsArr[floor][1];
-                default:
-                    return 0;
-            }
-        }
-
-        private synchronized int getNumberOfPeopleLeavingLiftAtFloor(int floor) {
-            return instructionsArr[floor][2];
-        }
     }
 }
